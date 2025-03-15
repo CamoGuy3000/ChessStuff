@@ -9,12 +9,39 @@ MAPPING = [
     [30, 31, 32, 33, 34, 35]
 ]
 
+"""
+  Turns a 2D array of 1's and 0's to the flat bits to send through shift_out
+"""
+def array_to_bits(array: list[list[int]]) -> list[bool]:
 
-def array_to_bits(array):
-  
 
-  bits = []
+  # Check lengths
+  if len(array) > len(MAPPING):
+    print("ERROR: `array_to_bits` array size mismatch.")
+    return [-1]
+  for i in range(len(array)):
+    if len(array[i]) > len(MAPPING[i]):
+      print("ERROR: `array_to_bits` array size mismatch.")
+      return [-1]
 
+  bits = [0]*(sum(len(sub_mapping) for sub_mapping in MAPPING))
+  # print(bits)
+
+  for i in range(len(array)):
+    for j in range(len(array[i])):
+      # print(f"{MAPPING[i][j]}: " + ("on" if array[i][j] == 1 else "off"))
+      bits[MAPPING[i][j]] = array[i][j]
 
 
   return bits
+
+
+if __name__ == "__main__":
+  
+  arr = [
+    [1, 1, 0, 0, 1, 1], 
+    [1, 1, 1]
+  ]
+
+  print(array_to_bits(arr))
+

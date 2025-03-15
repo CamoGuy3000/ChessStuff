@@ -23,7 +23,7 @@ GPIO.setup(CLOCK_PIN, GPIO.OUT)
 GPIO.setup(LATCH_PIN, GPIO.OUT)
 
 # Environment setup
-NUM_COILS = 8
+NUM_COILS: int = 8
 
 
 """
@@ -34,18 +34,20 @@ NUM_COILS = 8
   
   TODO: Choose if we want to have a length check, right now this will just send all bytes to shift register
 """
-def shift_out(bits):
+def shift_out(bits: list[bool] | list[int]):
+
+  DELAY = 0.001
 
   # GPIO.output(LATCH_PIN, GPIO.LOW)  # Latch low to start data transfer
 
   for bit in bits: # Shift out all bits
     GPIO.output(DATA_PIN, GPIO.HIGH if bit else GPIO.LOW)  # Set data line
     GPIO.output(CLOCK_PIN, GPIO.HIGH)  # Pulse clock to shift bit in
-    sleep(0.001)  # Small delay for stability
+    sleep(DELAY)  # Small delay for stability
     GPIO.output(CLOCK_PIN, GPIO.LOW)
 
   GPIO.output(LATCH_PIN, GPIO.HIGH)  # Latch high to store data
-  sleep(0.001)
+  sleep(DELAY)
   GPIO.output(LATCH_PIN, GPIO.LOW)  # Latch high to store data
 
 
