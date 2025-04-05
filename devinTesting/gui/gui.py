@@ -19,9 +19,6 @@ class ChessBoardGUI:
                 self.squares[row][col] = square
 
     def highlight_squares(self, positions, color="yellow"):
-        """Highlight squares from a list of (row, col) or from a flat list of 0's and 1's (length 64).
-        Each position can be a tuple (row, col) or a list of 1's and 0's.
-        """
         if isinstance(positions, list) and all(isinstance(p, int) for p in positions):
             if len(positions) != 64:
                 raise ValueError("List must be 64 elements long.")
@@ -30,6 +27,14 @@ class ChessBoardGUI:
             positions = [positions]
         for row, col in positions:
             if 0 <= row < 8 and 0 <= col < 8:
+                self.squares[row][col].config(bg=color)
+
+    def clear_highlights(self):
+        """Reset all squares to their original colors."""
+        colors = ["white", "gray"]
+        for row in range(8):
+            for col in range(8):
+                color = colors[(row + col) % 2]
                 self.squares[row][col].config(bg=color)
 
 if __name__ == "__main__":
@@ -43,5 +48,6 @@ if __name__ == "__main__":
                   0, 0, 0, 0, 0, 0, 0, 0,
                   0, 0, 0, 0, 0, 0, 0, 0,
                   0, 0, 0, 0, 0, 0, 0, 0]
-    gui.highlight_squares(binary_map)  # Example usage with binary map
+    gui.highlight_squares(binary_map)
+    # gui.clear_highlights()
     root.mainloop()
