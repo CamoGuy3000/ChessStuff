@@ -1,13 +1,17 @@
 import tkinter as tk
+from algorithms import simple_straight_path  # or another algorithm you define
 
 #TODO: Turns, un pasant, castling
 
 # Adjustable square size
 # 1 for tiny, 2 for medium, 3 for good sized, 4 for full screen
-    # this is probably dependent on screen size
-BOARD_SIZE = 3
+# this is probably dependent on screen size
+BOARD_SIZE = 2
 
-tile_width = BOARD_SIZE*4
+# Pathfinding algorithm to use (global)
+PATH_ALGORITHM = simple_straight_path
+
+tile_width = BOARD_SIZE * 4
 tile_height = tile_width // 2
 
 class ChessPiece:
@@ -44,10 +48,9 @@ class ChessBoardGUI:
     def on_square_click(self, row, col):
         if self.selected_square:
             if (row, col) in self.valid_moves:
-                self.move_piece(self.selected_square, (row, col))
-                self.selected_square = None
-                self.valid_moves = []
-                self.clear_highlights()
+                path = PATH_ALGORITHM(self.selected_square, (row, col))
+                self.highlight_squares(path, color="orange")  # Show magnet path
+                self.animate_piece_move(self.selected_square, path)
                 return
 
         piece = self.pieces[row][col]
@@ -60,6 +63,35 @@ class ChessBoardGUI:
         else:
             self.selected_square = None
             self.valid_moves = []
+
+    def animate_piece_move(self, start, path):
+        from_row, from_col = start
+        piece = self.pieces[from_row][from_col]
+        self.remove_piece(from_row, from_col)
+        go = False
+
+        def step_through(index):
+            if index > 0:
+                prev_r, prev_c = path[index - 1]
+                self.remove_piece(prev_r, prev_c)
+
+            if index < len(path):
+                r, c = path[index]
+                self.place_piece(r, c, piece)
+                self.root.after(200, lambda: step_through(index + 1))
+            else:
+                self.selected_square = None
+                self.valid_moves = []
+                self.clear_highlights()
+                self.finalize_move(path[-1][0], path[-1][1], piece)
+
+        step_through(0)
+
+    def finalize_move(self, row, col, piece):
+        self.place_piece(row, col, piece)
+        self.selected_square = None
+        self.valid_moves = []
+        self.clear_highlights()
 
     def move_piece(self, from_pos, to_pos):
         from_row, from_col = from_pos
@@ -92,13 +124,11 @@ class ChessBoardGUI:
             dir = -1 if color == 'white' else 1
             start_row = 6 if color == 'white' else 1
 
-            # forward
             if in_bounds(row + dir, col) and is_empty(row + dir, col):
                 moves.append((row + dir, col))
                 if row == start_row and is_empty(row + 2 * dir, col):
                     moves.append((row + 2 * dir, col))
 
-            # captures
             for dc in [-1, 1]:
                 r, c = row + dir, col + dc
                 if in_bounds(r, c) and is_opponent(r, c):
@@ -124,7 +154,7 @@ class ChessBoardGUI:
                 r, c = row + dr, col + dc
                 if in_bounds(r, c) and (is_empty(r, c) or is_opponent(r, c)):
                     moves.append((r, c))
-            return moves  # King moves only one square, return here
+            return moves
 
         if directions:
             for dr, dc in directions:
@@ -160,7 +190,6 @@ class ChessBoardGUI:
                 self.squares[row][col].config(bg=color)
 
     def clear_highlights(self):
-        """Reset all squares to their original colors."""
         colors = ["white", "gray"]
         for row in range(8):
             for col in range(8):
@@ -168,13 +197,10 @@ class ChessBoardGUI:
                 self.squares[row][col].config(bg=color)
 
     def setup_pieces(self):
-        # Setup black pieces (top of GUI)
         order = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
         for col in range(8):
             self.place_piece(0, col, ChessPiece(order[col], 'black'))
             self.place_piece(1, col, ChessPiece('P', 'black'))
-
-        # Setup white pieces (bottom of GUI)
         for col in range(8):
             self.place_piece(6, col, ChessPiece('P', 'white'))
             self.place_piece(7, col, ChessPiece(order[col], 'white'))
